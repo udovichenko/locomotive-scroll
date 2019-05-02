@@ -63,6 +63,9 @@ export default class extends Scroll {
 
         // @todo : to optimize
         this.instance.on((e) => {
+            if (this.stop) {
+                return;
+            }
 
             if(!this.isDraggingScrollBar) {
                 this.instance.delta.y -= e.deltaY;
@@ -123,6 +126,16 @@ export default class extends Scroll {
         // Resize event
         $window.on(EVENT.RESIZE,() => {
             this.update()
+        });
+
+        // Stop event
+        this.$container.on(EVENT.STOP, () => {
+            this.stop = true;
+        });
+
+        // Start event
+        this.$container.on(EVENT.START, () => {
+            this.stop = false;
         });
     }
 

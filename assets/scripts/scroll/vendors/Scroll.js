@@ -17,7 +17,9 @@ export const EVENT = {
     RESIZE: `resize.${EVENT_KEY}`,
     SCROLL: `scroll.${EVENT_KEY}`,
     SCROLLTO: `scrollTo.${EVENT_KEY}`,
-    UPDATE: `update.${EVENT_KEY}`
+    UPDATE: `update.${EVENT_KEY}`,
+    STOP: `stop.${EVENT_KEY}`,
+    START: `start.${EVENT_KEY}`
 };
 
 export const DEFAULTS = {
@@ -117,7 +119,6 @@ export default class {
         $window.on(EVENT.RESIZE, debounce(() => {
             this.update()
         }, 20));
-
     }
 
     /**
