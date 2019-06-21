@@ -241,7 +241,7 @@ export default class extends Scroll {
 
         for (let y = 0 ; y < this.sections.length; y ++) {
 
-            const elements = document.querySelectorAll(this.selector, this.sections[y].element);
+            const elements = this.sections[y].element.querySelectorAll(this.selector);
             const len = elements.length;
 
             for (let i = 0 ; i < elements.length; i ++) {
@@ -390,12 +390,12 @@ export default class extends Scroll {
     /**
      * Render the class/transform animations, and update the global scroll positionning.
      *
-     * @param  {boolean} isFirstCall Determines if this is the first occurence of method being called
+     * @param  {boolean} isForced Determines if this is a forced request (from a manual call to update or a resize)
      * @param  {object}  status      Optional status object received when method is
      *                               called by smooth-scrollbar instance listener.
      * @return {void}
      */
-    render(isFirstCall, e) {
+    render(isForced, e) {
         if(this.isScrolling) {
             this.instance.scroll.y = this.lerp(this.instance.scroll.y,this.instance.delta.y, this.inertia);
         } else if(this.isDraggingScrollBar) {
@@ -432,7 +432,7 @@ export default class extends Scroll {
             }
         }
 
-        this.transformElements(isFirstCall);
+        this.transformElements(isForced);
         this.animateElements();
 
         this.callbacks.onScroll(this.instance);
@@ -576,10 +576,10 @@ export default class extends Scroll {
     /**
      * Loop through all parallax-able elements and apply transform method(s).
      *
-     * @param  {boolean} isFirstCall Determines if this is the first occurence of method being called
+     * @param  {boolean} isForced Determines if this is a forced request (from a manual call to update or a resize)
      * @return {void}
      */
-    transformElements(isFirstCall) {
+    transformElements(isForced) {
         if (this.parallaxElements.length > 0) {
             const scrollBottom = this.instance.scroll.y + this.windowHeight;
             const scrollMiddle = this.instance.scroll.y + this.windowMiddle;
@@ -598,15 +598,18 @@ export default class extends Scroll {
 
                 this.toggleElement(curEl, i);
 
-                if (isFirstCall && !inView && curEl.speed) {
+                if (isForced && !inView && curEl.speed) {
                     // Different calculations if it is the first call and the item is not in the view
-                    if (curEl.position !== 'top') {
-                        transformDistance = (curEl.offset - this.windowMiddle - curEl.middle) * -curEl.speed;
-                    }
+                    // if (curEl.position !== 'top') {
+                    //     if(curEl.$element.attr('data-log')) console.log(`(curEl.offset (${curEl.offset}) - this.windowMiddle (${this.windowMiddle}) - curEl.middle (${curEl.middle})) * curEl.speed (${curEl.speed})`);
+                    //     transformDistance = (curEl.offset - this.windowMiddle - curEl.middle) * curEl.speed;
+                    // }
+
+                    transformDistance = 0
                 }
 
                 // If element is in view
-                if (inView && curEl.speed) {
+                if (inView && curEl.speed) { //|| (isForced && !inView && curEl.speed)) {
                     switch (curEl.position) {
                         case 'top':
                             transformDistance = this.instance.scroll.y * -curEl.speed;
