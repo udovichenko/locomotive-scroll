@@ -2,7 +2,7 @@
 // Locomotive Scroll
 // ==========================================================================
 /* jshint esnext: true */
-import { $window, $document } from '../../utils/environment';
+import { $window, $document, $body } from '../../utils/environment';
 
 import debounce from '../../utils/debounce';
 import { isNumeric } from '../../utils/is';
@@ -21,9 +21,9 @@ export const EVENT = {
 };
 
 export const DEFAULTS = {
-    container: $document,
+    container: $body,
     sections: '.js-section',
-    mobileContainer: $document,
+    mobileContainer: $body,
     onScroll: function(){},
     selector: '.js-animate',
     smooth: false,
@@ -96,12 +96,9 @@ export default class {
         $document.on(EVENT.CLICK, '.js-scrollto', (event) => {
             event.preventDefault();
 
-            let $target = $(event.currentTarget);
-            let offset = $target.data('offset');
-
             this.scrollTo({
-                sourceElem: $target,
-                offsetElem: offset
+                sourceElem: event.currentTarget,
+                offsetElem: event.currentTarget.getAttribute('data-offset')
             });
         });
         $document.on(EVENT.SCROLLTO, (event) => this.scrollTo(event.options));
@@ -125,26 +122,26 @@ export default class {
     addElements() {
         this.animatedElements = [];
 
-        const $elements = $(this.selector);
-        const len = $elements.length;
+        const elements = document.querySelectorAll(this.selector);
+        const len = elements.length;
         let i = 0;
 
         for (; i < len; i ++) {
-            let $element = $elements.eq(i);
-            let elementTarget = $element.attr('data-target');
-            let elementPosition = $element.attr('data-position');
-            let $target = (elementTarget && $(elementTarget).length) ? $(elementTarget) : $element;
-            let elementOffset = $target.offset().top;
-            let elementLimit = elementOffset + $target.outerHeight();
-            let elementSticky = (typeof $element.attr('data-sticky') === 'string');
-            let elementStickyTarget = $element.attr('data-sticky-target');
+            let element = elements[i];
+            let elementTarget = element.getAttribute('data-target');
+            let elementPosition = element.getAttribute('data-position');
+            let target = (elementTarget && document.querySelectorAll(elementTarget).length) ? document.querySelectorAll(elementTarget) : element;
+            let elementOffset = parseInt(target.getBoundingClientRect().top + this.instance.scroll.y);
+            let elementLimit = elementOffset + target.offsetHeight;
+            let elementSticky = (typeof element.getAttribute('data-sticky') === 'string');
+            let elementStickyTarget = element.getAttribute('data-sticky-target');
 
             let elementViewportOffset = null;
-            if(typeof $element.attr('data-viewport-offset') === 'string') {
-               elementViewportOffset = $element.attr('data-viewport-offset').split(',');
+            if(typeof element.getAttribute('data-viewport-offset') === 'string') {
+               elementViewportOffset = element.getAttribute('data-viewport-offset').split(',');
             }
             //Manage callback
-            let elementCallbackString = (typeof $element.attr('data-callback') === 'string') ? $element.attr('data-callback') : null;
+            let elementCallbackString = (typeof element.getAttribute('data-callback') === 'string') ? element.getAttribute('data-callback') : null;
             let elementCallback = null;
 
             if(elementCallbackString != null){
@@ -186,35 +183,39 @@ export default class {
             }
 
             // If elements loses its animation after scrolling past it
-            let elementRepeat = (typeof $element.attr('data-repeat') === 'string');
+            let elementRepeat = (typeof element.getAttribute('data-repeat') === 'string');
 
-            let elementInViewClass = $element.attr('data-inview-class');
+            let elementInViewClass = element.getAttribute('data-inview-class');
             if (typeof elementInViewClass === 'undefined') {
                 elementInViewClass = 'is-show';
             }
 
             if (elementSticky) {
                 if (typeof elementStickyTarget === 'undefined') {
-                    elementLimit = this.$container.height();
+                    elementLimit = this.$container[0].offsetHeight;
                 } else {
-                    elementLimit = $(elementStickyTarget).offset().top - $element.height();
+                    const stickyTargetEl = document.querySelectorAll(elementStickyTarget)[0]
+                    const stickyTargetBCR = stickyTargetEl.getBoundingClientRect()
+                    elementLimit = stickyTargetBCR.top + document.body.scrollTop - element.offsetHeight;
                 }
 
                 // Reset offset
-                $element.removeClass(elementInViewClass);
-                $element.removeClass('is-unstuck');
+                element.classList.remove(elementInViewClass);
+                element.classList.remove('is-unstuck');
 
-                $element.css({
-                    '-webkit-transform': 'translate3d(0, 0, 0)',
-                    '-ms-transform': 'translate3d(0, 0, 0)',
-                    'transform': 'translate3d(0, 0, 0)'
-                });
+                const transformValue = 'translate3d(0, 0, 0)'
+                element.style.webkitTransform = transformValue;
+                element.style.MozTransform = transformValue;
+                element.style.msTransform = transformValue;
+                element.style.OTransform = transformValue;
+                element.style.transform = transformValue;
             }
 
             // Don't add element if it already has its inview class and doesn't repeat
-            if (elementRepeat || !$element.hasClass(elementInViewClass)) {
+            if (elementRepeat || !element.classList.contains(elementInViewClass)) {
                 this.animatedElements[i] = {
-                    $element: $element,
+                    element: element,
+                    $element: $(element), // TEMPORARY
                     offset: Math.round(elementOffset),
                     repeat: elementRepeat,
                     position: elementPosition,
@@ -317,20 +318,20 @@ export default class {
 
             if (element.sticky) {
                 if (scrollTop > element.limit) {
-                    element.$element.addClass('is-unstuck');
+                    element.element.classList.add('is-unstuck');
                 } else {
-                    element.$element.removeClass('is-unstuck');
+                    element.element.classList.remove('is-unstuck');
                 }
 
                 if (scrollTop < element.offset) {
-                    element.$element.removeClass(element.inViewClass);
+                    element.element.classList.remove(element.inViewClass);
                 }
             }
 
             // Add class if inView, remove if not
             if (inView) {
-                if(!element.$element.hasClass(element.inViewClass)){
-                    element.$element.addClass(element.inViewClass);
+                if(!element.element.classList.contains(element.inViewClass)){
+                    element.element.classList.add(element.inViewClass);
                     this.triggerCallback(element,'enter');
                 }
 
@@ -341,16 +342,17 @@ export default class {
                 if (element.sticky) {
                     let y = this.instance.scroll.y - element.offset;
 
-                    element.$element.css({
-                        '-webkit-transform': `translate3d(0, ${y}px, 0)`,
-                        '-ms-transform': `translate3d(0, ${y}px, 0)`,
-                        'transform': `translate3d(0, ${y}px, 0)`
-                    });
+                    const transformValue = `translate3d(0, ${y}px, 0)`
+                    element.element.style.webkitTransform = transformValue;
+                    element.element.style.MozTransform = transformValue;
+                    element.element.style.msTransform = transformValue;
+                    element.element.style.OTransform = transformValue;
+                    element.element.style.transform = transformValue;
                 }
             } else {
                 if (element.repeat) {
-                    if(element.$element.hasClass(element.inViewClass)){
-                        element.$element.removeClass(element.inViewClass);
+                    if(element.element.classList.contains(element.inViewClass)){
+                        element.element.classList.remove(element.inViewClass);
                         this.triggerCallback(element,'leave');
                     }
                 }
@@ -386,53 +388,80 @@ export default class {
      * Scroll to a desired target.
      *
      * @param  {object} options
+     *      Available options :
+     *          {node} targetElem - The DOM element we want to scroll to
+     *          {node} sourceElem - An `<a>` element with an href targeting the anchor we want to scroll to
+     *          {node} offsetElem - A DOM element from which we get the height to substract from the targetOffset
+     *              (ex: use offsetElem to pass a mobile header that is above content, to make sure the scrollTo will be aligned with it)
+     *          {int} targetOffset - An absolute vertical scroll value to reach, or an offset to apply on top of given `targetElem` or `sourceElem`'s target
+     *          {int} delay - Amount of milliseconds to wait before starting to scroll
+     *          {boolean} toTop - Set to true to scroll all the way to the top
+     *          {boolean} toBottom - Set to true to scroll all the way to the bottom
+     *          {float} speed - Duration of the scroll
      * @return {void}
      */
     scrollTo(options) {
-        const $targetElem = options.targetElem;
-        const $sourceElem = options.sourceElem;
+        let targetElem = options.targetElem;
+        const sourceElem = options.sourceElem;
         const offsetElem = options.offsetElem;
         let targetOffset = isNumeric(options.targetOffset) ? parseInt(options.targetOffset) : 0;
-        const speed = isNumeric(options.speed) ? parseInt(options.speed) : 800;
         const delay = isNumeric(options.delay) ? parseInt(options.delay) : 0;
+        const speed = isNumeric(options.speed) ? parseInt(options.speed) : 800;
         const toTop = options.toTop;
         const toBottom = options.toBottom;
         let offset = 0;
 
-        if (typeof $targetElem === 'undefined' && typeof $sourceElem === 'undefined' && typeof targetOffset === 'undefined') {
-            console.warn('You must specify at least one parameter.')
+        // Make sure at least one of the required options has beeen filled
+        if (!toTop && !toBottom && !isNumeric(options.targetOffset) && !targetElem && !sourceElem) {
+            console.warn(`You must specify at least one of these parameters:`, [
+                '{boolean} toTop - Set to true to scroll all the way to the top',
+                '{boolean} toBottom - Set to true to scroll all the way to the bottom',
+                '{int} targetOffset - An absolute vertical scroll value to reach, or an offset to apply on top of given `targetElem` or `sourceElem`\'s target',
+                '{node} targetElem - The DOM element we want to scroll to',
+                '{node} sourceElem - An `<a>` element with an href targeting the anchor we want to scroll to'
+            ]);
             return false;
         }
 
-        if (typeof $targetElem !== 'undefined' && $targetElem instanceof jQuery && $targetElem.length > 0) {
-            targetOffset = $targetElem.offset().top + targetOffset;
-        }
-
-        if (typeof $sourceElem !== 'undefined' && $sourceElem instanceof jQuery && $sourceElem.length > 0) {
+        // If sourceElem is given, find and store the targetElem it's related to
+        if (sourceElem) {
             let targetData = '';
 
-            if ($sourceElem.attr('data-target')) {
-                targetData = $sourceElem.attr('data-target');
-            } else {
-                targetData = $sourceElem.attr('href');
-            }
+            console.log(sourceElem);
 
-            targetOffset = $(targetData).offset().top + targetOffset;
+            // Get the selector (given with `data-target` or `href` attributes on sourceElem)
+            let sourceElemTarget = sourceElem.getAttribute('data-target')
+            targetData = sourceElemTarget ? sourceElemTarget : sourceElem.getAttribute('href')
+
+            // Store the target for later
+            targetElem = document.querySelectorAll(targetData)[0]
         }
 
-        if (typeof offsetElem !== 'undefined') {
-            offset = $(offsetElem).outerHeight();
+        // We have a targetElem, get it's coordinates
+        if (targetElem) {
+            // Get targetElem offset from top
+            const targetElemBCR = targetElem.getBoundingClientRect()
+            const targetElemOffsetTop = targetElemBCR.top + document.documentElement.scrollTop // TODO - Improve current scroll position source, might not always be documentElement
+
+            // Final value of scroll destination : targetElemOffsetTop + (optional offset given in options)
+            targetOffset = targetElemOffsetTop + targetOffset;
+        }
+
+        // We have an offsetElem, get its height and remove it from targetOffset already computed
+        if (offsetElem) {
+            let offset = offsetElem.offsetHeight;
             targetOffset = targetOffset - offset;
         }
 
+        // If we want to go to one of boundaries
         if (toTop === true) {
             targetOffset = 0;
         } else if (toBottom === true) {
-            targetOffset = $document.height();
+            targetOffset = document.body.offsetHeight // TODO - Improve container height source, might not always be the body
         }
 
         setTimeout(() => {
-            $('html, body').animate({
+            $('html, body').animate({ // TODO - Remove jQuery here
                 scrollTop: targetOffset
             }, speed);
         }, delay);
