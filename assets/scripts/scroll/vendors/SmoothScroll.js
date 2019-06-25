@@ -200,6 +200,7 @@ export default class extends Scroll {
             let sectionElement = this.sectionsSelector[i];
             let offset = sectionElement.getBoundingClientRect().top - (window.innerHeight * 1.5) - this.getTranslate(sectionElement).y;
             let limit = offset + sectionElement.getBoundingClientRect().height + (window.innerHeight * 2);
+            let persistent = typeof sectionElement.getAttribute('data-persistent') === 'string'
 
             let inView = false;
             for (let i = this.sections.length - 1; i >= 0; i--) {
@@ -210,23 +211,14 @@ export default class extends Scroll {
 
             const section = {
                 element: sectionElement,
-                offset: offset,
-                limit: limit,
-                inView: inView
+                offset,
+                limit,
+                inView,
+                persistent
             }
 
             this.sections.push(section);
-
-            if(i === 2) {
-                let debug = {
-                    offset: sectionElement.getBoundingClientRect().top - (window.innerHeight * 1.5),
-                    scrollValue: parseInt(this.instance.scroll.y),
-                    limit: limit,
-                    final: offset
-                }
-            }
         }
-
     }
 
     /**
@@ -402,7 +394,7 @@ export default class extends Scroll {
         }
 
         for (let i = this.sections.length - 1; i >= 0; i--) {
-            if(this.instance.scroll.y > this.sections[i].offset && this.instance.scroll.y < this.sections[i].limit) {
+            if(this.sections[i].persistent || (this.instance.scroll.y > this.sections[i].offset && this.instance.scroll.y < this.sections[i].limit)) {
                 this.transform(this.sections[i].element,0,-this.instance.scroll.y);
                 this.sections[i].element.style.visibility = 'visible';
             } else {

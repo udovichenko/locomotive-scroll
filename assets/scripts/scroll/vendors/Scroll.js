@@ -191,7 +191,7 @@ export default class {
             }
 
             if (elementSticky) {
-                if (typeof elementStickyTarget === 'undefined') {
+                if (!elementStickyTarget) {
                     elementLimit = this.$container[0].offsetHeight;
                 } else {
                     const stickyTargetEl = document.querySelectorAll(elementStickyTarget)[0]
