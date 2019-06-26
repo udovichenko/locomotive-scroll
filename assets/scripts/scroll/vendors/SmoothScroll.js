@@ -11,8 +11,7 @@ import debounce from '../../utils/debounce';
 import VirtualScroll from 'virtual-scroll';
 import { isNumeric } from '../../utils/is';
 
-/**
- * Smooth scrolling using `smooth-scrollbar`.
+/**`.
  * Based on `Scroll` class, which allows animations of elements on the page
  * according to scroll position.
  *
@@ -28,6 +27,7 @@ export default class extends Scroll {
         this.inertia = options.inertia || DEFAULTS.inertia;
         this.scrollBarClassName = options.scrollBarClassName || DEFAULTS.scrollBarClassName;
         this.isScrollingClassName = options.isScrollingClassName || DEFAULTS.isScrollingClassName;
+        this.isDraggingClassName = options.isDraggingClassName || DEFAULTS.isDraggingClassName;
 
         this.parallaxElements = [];
         this.isDraggingScrollBar = false;
@@ -166,12 +166,14 @@ export default class extends Scroll {
     getScrollBar(e) {
         this.isDraggingScrollBar = true;
         this.checkScroll();
-        html.classList.add(this.isScrollingClassName);
+        html.classList.remove(this.isScrollingClassName);
+        html.classList.add(this.isDraggingClassName);
     }
 
     releaseScrollBar(e) {
         this.isDraggingScrollBar = false;
-        html.classList.remove(this.isScrollingClassName);
+        html.classList.add(this.isScrollingClassName);
+        html.classList.remove(this.isDraggingClassName);
     }
 
     moveScrollBar(e) {

@@ -33,6 +33,7 @@ export const DEFAULTS = {
     getSpeed: false,
     scrollBarClassName: 'o-scrollbar',
     isScrollingClassName: 'is-scrolling',
+    isDraggingClassName: 'is-dragging'
 };
 
 /**
