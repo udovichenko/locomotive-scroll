@@ -187,7 +187,7 @@ export default class {
             let elementRepeat = (typeof element.getAttribute('data-repeat') === 'string');
 
             let elementInViewClass = element.getAttribute('data-inview-class');
-            if (typeof elementInViewClass === 'undefined') {
+            if (!elementInViewClass) {
                 elementInViewClass = 'is-show';
             }
 
