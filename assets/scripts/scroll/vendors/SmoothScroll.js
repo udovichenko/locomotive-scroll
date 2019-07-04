@@ -205,10 +205,8 @@ export default class extends Scroll {
             let persistent = typeof sectionElement.getAttribute('data-persistent') === 'string'
 
             let inView = false;
-            for (let i = this.sections.length - 1; i >= 0; i--) {
-                if(this.instance.scroll.y > offset && this.instance.scroll.y < limit) {
-                    inView = true;
-                }
+            if(this.instance.scroll.y > offset && this.instance.scroll.y < limit) {
+                inView = true;
             }
 
             const section = {
