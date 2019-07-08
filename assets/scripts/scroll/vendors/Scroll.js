@@ -339,23 +339,37 @@ export default class {
                 if (!element.repeat && !element.sticky) {
                     removeFromContainer = true;
                 }
-
-                if (element.sticky) {
-                    let y = this.instance.scroll.y - element.offset;
-
-                    const transformValue = `translate3d(0, ${y}px, 0)`
-                    element.element.style.webkitTransform = transformValue;
-                    element.element.style.MozTransform = transformValue;
-                    element.element.style.msTransform = transformValue;
-                    element.element.style.OTransform = transformValue;
-                    element.element.style.transform = transformValue;
-                }
             } else {
                 if (element.repeat) {
                     if(element.element.classList.contains(element.inViewClass)){
                         element.element.classList.remove(element.inViewClass);
                         this.triggerCallback(element,'leave');
                     }
+                }
+            }
+
+            if(element.sticky) {
+                let transformDistance
+                if(inView) {
+                    transformDistance = this.instance.scroll.y - element.offset;
+                } else {
+                    if(this.instance.scroll.y < element.offset) {
+                        transformDistance = 0;
+                    }
+                    if(this.instance.scroll.y > element.limit) {
+                        transformDistance = element.limit - element.offset;
+                    }
+                }
+
+                if(element.transformDistance != transformDistance) {
+                    element.transformDistance = transformDistance
+
+                    const transformValue = `translate3d(0, ${transformDistance}px, 0)`
+                    element.element.style.webkitTransform = transformValue;
+                    element.element.style.MozTransform = transformValue;
+                    element.element.style.msTransform = transformValue;
+                    element.element.style.OTransform = transformValue;
+                    element.element.style.transform = transformValue;
                 }
             }
         }
