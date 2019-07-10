@@ -257,15 +257,15 @@ export default class {
      * Render the class animations, and update the global scroll positionning.
      */
     render() {
-        // if (window.pageYOffset > this.instance.scroll.y) {
-        //     if (this.instance.scroll.direction !== 'down') {
-        //         this.instance.scroll.direction = 'down';
-        //     }
-        // } else if (window.pageYOffset < this.instance.scroll.y) {
-        //     if (this.instance.scroll.direction !== 'up') {
-        //         this.instance.scroll.direction = 'up';
-        //     }
-        // }
+        if (window.pageYOffset > this.instance.scroll.y) {
+            if (this.instance.scroll.direction !== 'down') {
+                this.instance.scroll.direction = 'down';
+            }
+        } else if (window.pageYOffset < this.instance.scroll.y) {
+            if (this.instance.scroll.direction !== 'up') {
+                this.instance.scroll.direction = 'up';
+            }
+        }
 
         if (this.instance.scroll.y !== window.pageYOffset) {
             this.instance.scroll.y = window.pageYOffset;
@@ -274,7 +274,7 @@ export default class {
             this.instance.scroll.x = window.pageXOffset;
         }
 
-        this.callbacks.onScroll(this.scroll)
+        this.callbacks.onScroll(this.instance)
 
         this.animateElements();
     }
