@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        .section {
+            height: 101vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .section-2 {
+            background-color: #666666;
+        }
+
+        html {
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        body {
+            background-color: #a4a4a4;
+            padding: 0;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div data-scroll-container>
+    <div class="section section-1" data-scroll-section>
+        <div class="wrap">
+            <h1 data-scroll>Scroll</h1>
+        </div>
+    </div>
+    <div class="section section-2" data-scroll-section>
+        <div class="wrap" data-scroll data-scroll-call="dispatchState" data-scroll-repeat>
+            <h2>Resize</h2>
+            <div>Enter: <span data-enter>0</span></div>
+            <div>Exit: <span data-exit>0</span></div>
+            <div>😬</div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import LocomotiveScroll from './dist/locomotive-scroll.esm.js'
+
+    window.scroll = new LocomotiveScroll({
+        el: document.querySelector("[data-scroll-container]"),
+        smooth: true
+    });
+
+    const enter = document.querySelector("[data-enter]");
+    const exit = document.querySelector("[data-exit]");
+
+    let enterCount = 0;
+    let exitCount = 0;
+
+    scroll.on("call", (func, state, event) => {
+        switch (func) {
+            case "dispatchState":
+                if (state === "enter") {
+                    enterCount++;
+                    enter.innerText = enterCount;
+                    console.log("enter");
+                } else {
+                    exitCount++;
+                    exit.innerText = exitCount;
+                    console.log("exit");
+                }
+                break;
+        }
+    });
+</script>
+</body>
+</html>
